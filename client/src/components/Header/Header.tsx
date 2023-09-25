@@ -18,8 +18,8 @@ const Header = () => {
     <div className="sticky bg-white top-0 z-[100] flex justify-between items-center text-text-sub w-full h-20 border-b-[1px] px-3 lgl:px-10  xl:px-28  shadow-md">
       <img
         className="w-[120px] mdl:w-[166px] object-cover"
-        src={images.logoDrou}
-        alt={images.logoDrou}
+        src={images.logo.logoDrou}
+        alt={images.logo.logoDrou}
       />
       <div className="hidden lgl:flex text-15 gap-10 font-bold">
         <Item title="Home" path="/" />

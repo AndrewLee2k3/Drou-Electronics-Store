@@ -6,7 +6,7 @@ const DefaultLayout = () => {
   return (
     <div>
       <Header />
-      <div className="min-h-screen max-w-7xl  mx-auto px-3 lgl:p-0">
+      <div className="min-h-screen mx-auto px-3 lgl:p-0">
         <Outlet />
       </div>
       <Footer />

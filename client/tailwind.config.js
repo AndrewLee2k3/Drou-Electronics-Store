@@ -14,13 +14,17 @@ export default {
         xl: '1280px'
       },
       colors: {
-        red: '#e52e06',
+        red: '#E52E06',
+        primary: '#E52E06',
         dark: {
           20: '#888888',
-          40: '#444'
+          40: '#444',
+          60: '#2B2B2B'
         },
 
-        light: {},
+        light: {
+          50: '#f8f8f8'
+        },
 
         text: {
           main: '#323232',
@@ -32,8 +36,11 @@ export default {
         menu: '0 0 60px 50px rgba(0, 0, 0, 0.3)',
         arround: '0 5px 30px 5px rgba(0, 0, 0, 0.3)'
       },
+      backgroundImage: {},
 
       fontSize: {
+        56: '56px',
+        40: '40px',
         15: '15px'
       }
     }
