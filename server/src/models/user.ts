@@ -5,8 +5,11 @@ import {
   pre,
 } from "@typegoose/typegoose";
 import bcrypt from "bcryptjs";
-
-@pre<User>("save", async function () {
+import crypto from "crypto";
+@pre<User>("save", async function (next) {
+  if (!this.isModified("password")) {
+    next();
+  }
   const salt: string = bcrypt.genSaltSync(10);
   this.password = bcrypt.hashSync(this.password, salt);
 })
@@ -40,10 +43,28 @@ export class User {
 
   @prop({})
   public refreshToken?: string;
-  
+
+  @prop({})
+  public passwordResetToken?: string;
+  @prop({})
+  public passwordChangeAt?: Date;
+  @prop({})
+  public passwordResetExpires?: Date;
+
   public async isPasswordMatched(enteredPassword: string): Promise<boolean> {
     const isMatch = bcrypt.compareSync(enteredPassword, this.password);
     return isMatch;
+  }
+
+  public async createPasswordResetToken(): Promise<string> {
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    this.passwordResetToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    this.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000); // 10 minutes
+    return resetToken;
   }
 }
 

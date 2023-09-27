@@ -5,6 +5,9 @@ import { User, UserModel } from "../models/user";
 import generateToken from "../config/jwtToken";
 import { validateMongodbID } from "../utils/validateMongodbID";
 import generateRefreshToken from "../config/refreshToken";
+import { sendEmail } from "./email";
+import { SendEmail } from "../types/email";
+import crypto from "crypto";
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -21,20 +24,22 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     );
 
     // Cookies
-    const optionsCookie = {
+
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       maxAge: 72 * 60 * 60 * 1000,
-    };
-
-    res.cookie("refreshToken", refreshToken, optionsCookie);
+    });
 
     res.status(200).json({
-      _id: findUser?._id,
-      firstname: findUser?.firstname,
-      lastname: findUser?.lastname,
-      email: findUser?.email,
-      tel: findUser?.tel,
-      token: generateToken(findUser?._id),
+      message: "Login Successfully! 💥",
+      user: {
+        _id: findUser?._id,
+        firstname: findUser?.firstname,
+        lastname: findUser?.lastname,
+        email: findUser?.email,
+        tel: findUser?.tel,
+        token: generateToken(findUser?._id),
+      },
     });
   } else {
     throw new Error("Invalid email or password");
@@ -102,6 +107,92 @@ export const logout = asyncHandler(async (req: Request, res: Response) => {
 
   res.sendStatus(204);
 });
+
+export const updatePassword = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (req.user) {
+      console.log(req.user);
+      const { _id } = req.user;
+
+      console.log(_id);
+
+      validateMongodbID(_id);
+      const password = req.body.password;
+      console.log(password);
+
+      const user = await UserModel.findById(_id);
+      if (user && password) {
+        user.password = password;
+        const updatePassword = await user.save();
+        res.status(200).json({
+          message: "Password Updated Successfully! 💥",
+          updatePassword,
+        });
+      } else {
+        res.json(user);
+      }
+    } else {
+      throw new Error("Not Found User!");
+    }
+  }
+);
+
+export const forgotPasswordToken = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { email } = req.body;
+    const user = await UserModel.findOne({ email });
+    if (!user) throw new Error("User not found with this email! 💥");
+    try {
+      const token = await user.createPasswordResetToken();
+      await user.save();
+      const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid till 10 minutes from now. <a href='http://localhost:6000/api/user/reset-password/${token}'>Click Here</>`;
+
+      const data: SendEmail = {
+        to: email,
+        text: "Hey Guys 👋",
+        subject: "Forgot Password 💻",
+        html: resetURL,
+      };
+
+      sendEmail(data);
+      res.json({ message: "Get Token Successfully! 💥", token });
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+);
+
+export const resetPassword = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { password } = req.body;
+    console.log("password: ", password);
+
+    const { token } = req.params;
+    console.log("token: ", token);
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await UserModel.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      throw new Error("Token Expired, Please try again later! 💥");
+    }
+
+    user.password = password;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+
+    await user.save();
+
+    res.status(201).json({
+      message: "Reset Password Successfully! 💥",
+      user,
+    });
+  }
+);
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const email = req.body.email;
