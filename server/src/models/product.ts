@@ -19,6 +19,8 @@ class Rating {
 
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class Product {
+  public _id?: string;
+
   @prop({ required: true, trim: true })
   title!: string;
 

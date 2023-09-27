@@ -41,14 +41,14 @@ export class User {
   @prop({ default: [] })
   public cart?: [];
 
-  @prop({})
+  @prop()
   public refreshToken?: string;
 
-  @prop({})
+  @prop()
   public passwordResetToken?: string;
-  @prop({})
+  @prop()
   public passwordChangeAt?: Date;
-  @prop({})
+  @prop()
   public passwordResetExpires?: Date;
 
   public async isPasswordMatched(enteredPassword: string): Promise<boolean> {
