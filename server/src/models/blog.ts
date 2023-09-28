@@ -40,10 +40,10 @@ export class Blog {
   isDisliked?: boolean;
 
   @prop({ ref: User })
-  public likes?: Ref<User>[];
+  likes?: Ref<User>[];
 
   @prop({ ref: User })
-  public dislikes?: Ref<User>[];
+  dislikes?: Ref<User>[];
 }
 
 export const BlogModel = getModelForClass(Blog);

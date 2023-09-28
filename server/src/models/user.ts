@@ -3,9 +3,11 @@ import {
   prop,
   getModelForClass,
   pre,
+  Ref,
 } from "@typegoose/typegoose";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { Product } from "./product";
 @pre<User>("save", async function (next) {
   if (!this.isModified("password")) {
     next();
@@ -18,38 +20,41 @@ export class User {
   public _id?: string;
 
   @prop({ required: true })
-  public firstname!: string;
+  firstname!: string;
 
   @prop({ required: true })
-  public lastname!: string;
+  lastname!: string;
 
   @prop({ required: true, unique: true })
-  public email!: string;
+  email!: string;
 
   @prop({ required: true, unique: true })
-  public tel!: string;
+  tel!: string;
 
   @prop({ required: true })
-  public password!: string;
+  password!: string;
 
   @prop({ default: "user" })
-  public role?: string;
+  role?: string;
 
   @prop({ default: false })
-  public isBlocked?: boolean;
+  isBlocked?: boolean;
 
   @prop({ default: [] })
-  public cart?: [];
+  cart?: [];
 
   @prop()
-  public refreshToken?: string;
+  refreshToken?: string;
+
+  @prop({ ref: Product })
+  wishlist?: Ref<Product>[];
 
   @prop()
-  public passwordResetToken?: string;
+  passwordResetToken?: string;
   @prop()
-  public passwordChangeAt?: Date;
+  passwordChangeAt?: Date;
   @prop()
-  public passwordResetExpires?: Date;
+  passwordResetExpires?: Date;
 
   public async isPasswordMatched(enteredPassword: string): Promise<boolean> {
     const isMatch = bcrypt.compareSync(enteredPassword, this.password);

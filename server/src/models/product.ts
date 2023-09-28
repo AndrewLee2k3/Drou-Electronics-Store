@@ -6,19 +6,23 @@ import {
 } from "@typegoose/typegoose";
 import { User } from "./user";
 
-class Rating {
-  @prop({ type: () => Number })
+export class Rating {
+  public _id?: string;
+  @prop()
   star?: number;
 
-  @prop({ type: () => String })
+  @prop()
   comment?: string;
 
-  @prop({ ref: () => User }) // Sử dụng decorator ref để chỉ định tham chiếu tới mô hình User
+  @prop({ ref: User })
   postedby?: Ref<User>;
 }
 
 @modelOptions({ schemaOptions: { timestamps: true } })
 export class Product {
+  save() {
+    throw new Error("Method not implemented.");
+  }
   public _id?: string;
 
   @prop({ required: true, trim: true })
@@ -54,7 +58,7 @@ export class Product {
   @prop()
   tags?: string;
 
-  @prop({ type: () => [Rating] })
+  @prop()
   ratings?: Rating[];
 
   @prop({ default: 0 })

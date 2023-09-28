@@ -1,7 +1,11 @@
 import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
-import { Product, ProductModel } from "../models/product";
+import { Product, ProductModel, Rating } from "../models/product";
 import slugify from "slugify";
+import { validateMongodbID } from "../utils/validateMongodbID";
+import { User, UserModel } from "../models/user";
+import { Ref } from "@typegoose/typegoose";
+
 export const createProduct = asyncHandler(
   async (req: Request, res: Response) => {
     try {
@@ -134,3 +138,112 @@ export const getAllProduct = asyncHandler(
     }
   }
 );
+
+export const addToWishlist = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      const prodId: string = req.body.prodId;
+      validateMongodbID(prodId);
+      const userId = req?.user?._id;
+      validateMongodbID(userId);
+
+      const user: User | null = await UserModel.findById(userId);
+
+      const alreadyAdded: Ref<Product> | undefined = user?.wishlist?.find(
+        (id: Ref<Product>) => id?.toString() === prodId?.toString()
+      );
+
+      const updatedUser = alreadyAdded
+        ? await UserModel.findByIdAndUpdate(
+            userId,
+            {
+              $pull: { wishlist: prodId },
+            },
+            { new: true }
+          )
+        : await UserModel.findByIdAndUpdate(
+            userId,
+            {
+              $push: { wishlist: prodId },
+            },
+            { new: true }
+          );
+
+      res.status(201).json({ message: "Successfully! 💥", user: updatedUser });
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+);
+
+export const rating = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const star: number = req.body.star;
+    const comment: string = req.body.comment;
+
+    const prodId: string = req.body.prodId;
+    validateMongodbID(prodId);
+    const userId = req?.user?._id;
+    validateMongodbID(userId);
+
+    const product: Product | null = await ProductModel.findById(prodId);
+
+    const alreadyRated: Rating | undefined = product?.ratings?.find(
+      (id) => id?.postedby?.toString() === userId?.toString()
+    );
+
+    alreadyRated
+      ? await ProductModel.updateOne(
+          {
+            ratings: { $elemMatch: alreadyRated },
+          },
+          {
+            $set: { "ratings.$.star": star, "ratings.$.comment": comment },
+          },
+          { new: true }
+        )
+      : await ProductModel.findByIdAndUpdate(
+          prodId,
+          {
+            $push: {
+              ratings: {
+                star,
+                comment,
+                postedby: userId,
+              },
+            },
+          },
+          {
+            new: true,
+          }
+        );
+
+    const updatedProduct: Product | null = await ProductModel.findById(prodId);
+    const ratings: Rating[] = updatedProduct?.ratings || [];
+    const totalRatings: number = ratings.length;
+    const totalStars: number = ratings.reduce((sum, rating) => {
+      if (rating.star !== undefined) {
+        return sum + rating.star;
+      }
+      return sum;
+    }, 0);
+
+    const averageRating: number =
+      totalRatings === 0 ? 0 : Math.round(totalStars / totalRatings);
+
+    const finalProduct = await ProductModel.findByIdAndUpdate(
+      prodId,
+      {
+        totalrating: averageRating,
+      },
+      { new: true }
+    );
+
+    res.status(201).json({
+      message: "Product Rating Successfully! 💥",
+      product: finalProduct,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
