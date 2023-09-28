@@ -5,6 +5,7 @@ import blogRouter from "./blog";
 import prodCategoryRouter from "./prodCategory";
 import blogCategoryRouter from "./blogCategory";
 import brandRouter from "./brands";
+import couponRouter from "./coupon";
 
 const routes = (app: Application) => {
   app.use("/api/users", authRoute);
@@ -13,6 +14,7 @@ const routes = (app: Application) => {
   app.use("/api/category", prodCategoryRouter);
   app.use("/api/blog-category", blogCategoryRouter);
   app.use("/api/brands", brandRouter);
+  app.use("/api/coupons", couponRouter);
 };
 
 export default routes;
